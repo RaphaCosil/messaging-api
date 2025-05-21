@@ -2,12 +2,14 @@ package router
 
 import (
 	"github.com/RaphaCosil/messaging-api/internal/handler/http"
+	"github.com/RaphaCosil/messaging-api/internal/handler/websocket"
 	"github.com/gin-gonic/gin"
 )
 
 func SetupRouter(
 	userHandler *http.UserHandler,
 	chatHandler *http.ChatHandler,
+	wsHandler *websocket.WebSocketHandler,
 ) *gin.Engine {
 	r := gin.Default()
 
@@ -20,7 +22,7 @@ func SetupRouter(
 		userGroup.DELETE("/:id", userHandler.Delete)
 		userGroup.GET("/username/:username", userHandler.FindByUsername)
 		userGroup.GET("/chat/:chat_id", userHandler.FindByChatID)
-	}
+		}
 
 	chatGroup := r.Group("/chat")
 	{
@@ -33,6 +35,13 @@ func SetupRouter(
 		chatGroup.DELETE("/user/:user_id", chatHandler.RemoveUserFromChat)
 		chatGroup.GET("/user/:user_id/chat/:chat_id/access", chatHandler.UserHasAccessToChat)
 	}
+
+	r.GET("/ws", func(c *gin.Context) {
+        wsHandler.HandleConnection(
+			c.Writer,
+			c.Request,
+		)
+    })
 
 	return r
 }
