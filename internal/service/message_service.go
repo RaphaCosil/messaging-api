@@ -9,7 +9,6 @@ type MessageService interface {
 	FindAll() ([]model.Message, error)
 	FindByID(id uint) (model.Message, error)
 	Create(message model.Message) (model.Message, error)
-	Update(message model.Message) (model.Message, error)
 	Delete(id uint) error
 	FindByChatID(chatID uint) ([]model.Message, error)
 	FindByUserID(userID uint) ([]model.Message, error)
@@ -33,10 +32,6 @@ func (s *messageService) FindByID(id uint) (model.Message, error){
 
 func (s *messageService) Create(message model.Message) (model.Message, error){
 	return s.messageRepo.Create(message)
-}
-
-func (s *messageService) Update(message model.Message) (model.Message, error){
-	return s.messageRepo.Update(message)
 }
 
 func (s *messageService) Delete(id uint) error {

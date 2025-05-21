@@ -9,7 +9,7 @@ type ChatService interface {
 	FindAll() ([]model.Chat, error)
 	FindByID(id uint) (model.Chat, error)
 	Create(chat model.Chat) (model.Chat, error)
-	Update(chat model.Chat) (model.Chat, error)
+	Update(id uint, chat model.Chat) (model.Chat, error)
 	Delete(id uint) error
 	FindByUserID(userID uint) ([]model.Chat, error)
 }
@@ -34,8 +34,8 @@ func (s *chatService) Create(chat model.Chat) (model.Chat, error){
 	return s.chatRepo.Create(chat)
 }
 
-func (s *chatService) Update(chat model.Chat) (model.Chat, error){
-	return s.chatRepo.Update(chat)
+func (s *chatService) Update(id uint, chat model.Chat) (model.Chat, error){
+	return s.chatRepo.Update(id, chat)
 }
 
 func (s *chatService) Delete(id uint) error {

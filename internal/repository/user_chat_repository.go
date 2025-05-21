@@ -8,7 +8,7 @@ import (
 type UserChatRepository interface {
 	FindAll() ([]model.UserChat, error)
 	Create(userChat model.UserChat) (model.UserChat, error)
-	Delete(id uint) error
+	Delete(userChat model.UserChat) error
 	FindByUserID(userID uint) ([]model.UserChat, error)
 	FindByChatID(chatID uint) ([]model.UserChat, error)
 	FindByUserIDAndChatID(userID, chatID uint) (model.UserChat, error)
@@ -38,8 +38,8 @@ func (r *userChatRepository) Create(userChat model.UserChat) (model.UserChat, er
 	return userChat, nil
 }
 
-func (r *userChatRepository) Delete(id uint) error {
-	if err := r.db.Delete(&model.UserChat{}, id).Error; err != nil {
+func (r *userChatRepository) Delete(userChat model.UserChat) error {
+	if err := r.db.Delete(&userChat).Error; err != nil {
 		return err
 	}
 	return nil

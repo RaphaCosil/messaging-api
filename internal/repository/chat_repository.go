@@ -9,7 +9,7 @@ type ChatRepository interface {
 	FindAll() ([]model.Chat, error)
 	FindByID(id uint) (model.Chat, error)
 	Create(chat model.Chat) (model.Chat, error)
-	Update(chat model.Chat) (model.Chat, error)
+	Update(id uint, chat model.Chat) (model.Chat, error)
 	Delete(id uint) error
 	FindByUserID(userID uint) ([]model.Chat, error)
 }
@@ -46,8 +46,8 @@ func (r *chatRepository) Create(chat model.Chat) (model.Chat, error) {
 	return chat, nil
 }
 
-func (r *chatRepository) Update(chat model.Chat) (model.Chat, error) {
-	if err := r.db.Save(&chat).Error; err != nil {
+func (r *chatRepository) Update(id uint, chat model.Chat) (model.Chat, error) {
+	if err := r.db.Model(&chat).Where("chat_id = ?", id).Updates(chat).Error; err != nil {
 		return model.Chat{}, err
 	}
 	return chat, nil

@@ -9,7 +9,7 @@ type UserService interface {
 	FindAll() ([]model.User, error)
 	FindByID(id uint) (model.User, error)
 	Create(user model.User) (model.User, error)
-	Update(user model.User) (model.User, error)
+	Update(id uint, user model.User) (model.User, error)
 	Delete(id uint) error
 	FindByUsername(username string) (model.User, error)
 	FindByChatID(chatID uint) ([]model.User, error)
@@ -35,8 +35,8 @@ func (s *userService) Create(user model.User) (model.User, error) {
 	return s.userRepo.Create(user)
 }
 
-func (s *userService) Update(user model.User) (model.User, error) {
-	return s.userRepo.Update(user)
+func (s *userService) Update(id uint, user model.User) (model.User, error) {
+	return s.userRepo.Update(id, user)
 }
 
 func (s *userService) Delete(id uint) error {
