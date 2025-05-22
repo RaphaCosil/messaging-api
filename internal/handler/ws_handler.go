@@ -4,7 +4,10 @@ import (
     "net/http"
     "sync"
     "time"
+    "encoding/json"
     "github.com/gorilla/websocket"
+    "github.com/RaphaCosil/messaging-api/internal/model"
+    "github.com/RaphaCosil/messaging-api/internal/service"
 )
 
 type GenericMessage struct {
@@ -15,6 +18,8 @@ type GenericMessage struct {
 
 type Client struct {
     conn     *websocket.Conn
+    userId   uint
+    chatId   uint
     username string
 }
 
@@ -55,6 +60,14 @@ var upgrader = websocket.Upgrader{
 type WebSocketHandler struct {
     Hub *Hub
     mu  sync.Mutex
+    messageService service.MessageService
+}
+
+func NewWebSocketHandler(hub *Hub, messageService service.MessageService) *WebSocketHandler {
+    return &WebSocketHandler{
+        Hub: hub,
+        messageService: messageService,
+    }
 }
 
 func (h *WebSocketHandler) HandleConnection(w http.ResponseWriter, r *http.Request) {
@@ -65,15 +78,41 @@ func (h *WebSocketHandler) HandleConnection(w http.ResponseWriter, r *http.Reque
     defer conn.Close()
 
     var username string
+    var userId, chatId uint
 
     _, msg, err := conn.ReadMessage()
     if err != nil {
         return
     }
 
-    username = string(msg)
+    var initialData struct {
+        Username string `json:"username"`
+        UserID   uint    `json:"user_id"`
+        ChatID   uint    `json:"chat_id"`
+    }
+    
+    err = json.Unmarshal(msg, &initialData)
+    if err != nil {
+        return
+    }
 
-    client := &Client{conn: conn, username: username}
+    username = initialData.Username
+    userId = initialData.UserID
+    chatId = initialData.ChatID
+
+    if username == "" || userId == 0 || chatId == 0 {
+        conn.WriteMessage(websocket.TextMessage, []byte("Invalid initial data"))
+        return
+    }
+
+    client := &Client{conn: conn, userId: userId, chatId: chatId, username: username}
+
+    h.mu.Lock()
+    if _, ok := h.Hub.clients[client]; ok {
+        conn.WriteMessage(websocket.TextMessage, []byte("User already connected"))
+        h.mu.Unlock()
+        return
+    }
     h.mu.Lock()
     h.Hub.clients[client] = true
     h.mu.Unlock()
@@ -86,20 +125,44 @@ func (h *WebSocketHandler) HandleConnection(w http.ResponseWriter, r *http.Reque
 }
 
 func (h *WebSocketHandler) HandleMessage(msg GenericMessage) {
-    h.mu.Lock()
-    defer h.mu.Unlock()
+    switch msg.Type {
+    case "send-message":
+        h.Hub.broadcast <- msg
 
-    for client := range h.Hub.clients {
-        err := client.conn.WriteJSON(msg)
+        var message model.Message
+
+        err := json.Unmarshal(msg.Content.([]byte), &message)
         if err != nil {
-            client.conn.Close()
-            delete(h.Hub.clients, client)
+            return
         }
-    }
-}
 
-func NewWebSocketHandler(hub *Hub) *WebSocketHandler {
-    return &WebSocketHandler{
-        Hub: hub,
+        message.SentAt = time.Now()
+
+        h.messageService.Create(message)
+
+    case "update-message":
+        h.Hub.broadcast <- msg
+        var message model.Message
+
+        err := json.Unmarshal(msg.Content.([]byte), &message)
+        if err != nil {
+            return
+        }
+
+        message.SentAt = time.Now()
+
+        h.messageService.Update(message.MessageID, message)
+
+    case "delete-message":
+        h.Hub.broadcast <- msg
+
+        var messageId uint
+
+        err := json.Unmarshal(msg.Content.([]byte), &messageId)
+        if err != nil {
+            return
+        }
+
+        h.messageService.Delete(messageId)
     }
 }

@@ -1,0 +1,40 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0" version="26.1.1">
+  <diagram name="database modeling" id="Hoeq6DvxizT1Vt8K7gLI">
+    <mxGraphModel dx="1149" dy="460" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ywKfvuuUJCsj_BXJOMeK-13" value="&lt;div style=&quot;box-sizing: border-box; width: 100%; background: rgb(228, 228, 228); padding: 2px;&quot;&gt;User&lt;/div&gt;&lt;table style=&quot;width:100%;font-size:1em;&quot; cellpadding=&quot;2&quot; cellspacing=&quot;0&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td&gt;PK&lt;/td&gt;&lt;td&gt;user_id&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;br&gt;&lt;/td&gt;&lt;td&gt;username: char(255)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;br&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="180" y="100" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ywKfvuuUJCsj_BXJOMeK-14" value="&lt;div style=&quot;box-sizing: border-box; width: 100%; background: rgb(228, 228, 228); padding: 2px;&quot;&gt;Chat&lt;/div&gt;&lt;table style=&quot;width:100%;font-size:1em;&quot; cellpadding=&quot;2&quot; cellspacing=&quot;0&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td&gt;PK&lt;/td&gt;&lt;td&gt;chat_id&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;br&gt;&lt;/td&gt;&lt;td&gt;chat_name: char(255)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;br&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="180" y="240" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ywKfvuuUJCsj_BXJOMeK-15" value="&lt;div style=&quot;box-sizing: border-box; width: 100%; background: rgb(228, 228, 228); padding: 2px;&quot;&gt;Message&lt;/div&gt;&lt;table style=&quot;width:100%;font-size:1em;&quot; cellpadding=&quot;2&quot; cellspacing=&quot;0&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td&gt;PK&lt;/td&gt;&lt;td&gt;message_id: int&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;FK1&lt;/td&gt;&lt;td&gt;chat_id: int&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;FK2&lt;br&gt;&lt;br&gt;&lt;/td&gt;&lt;td&gt;user_id: int&lt;br&gt;content: char(255)&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="180" y="380" width="180" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="ywKfvuuUJCsj_BXJOMeK-17" value="&lt;div style=&quot;box-sizing: border-box; width: 100%; background: rgb(228, 228, 228); padding: 2px;&quot;&gt;User_Chat&lt;/div&gt;&lt;table style=&quot;width:100%;font-size:1em;&quot; cellpadding=&quot;2&quot; cellspacing=&quot;0&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td&gt;PK&lt;/td&gt;&lt;td&gt;user_chat_id&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;FK1&lt;/td&gt;&lt;td&gt;user_id&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;FK2&lt;/td&gt;&lt;td&gt;chat_id&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="400" y="160" width="180" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ywKfvuuUJCsj_BXJOMeK-18" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToMany;endFill=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ywKfvuuUJCsj_BXJOMeK-13" target="ywKfvuuUJCsj_BXJOMeK-17">
+          <mxGeometry width="100" height="100" relative="1" as="geometry">
+            <mxPoint x="380" y="290" as="sourcePoint" />
+            <mxPoint x="480" y="190" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ywKfvuuUJCsj_BXJOMeK-20" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERmany;startArrow=ERmany;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="ywKfvuuUJCsj_BXJOMeK-14" target="ywKfvuuUJCsj_BXJOMeK-17">
+          <mxGeometry width="100" height="100" relative="1" as="geometry">
+            <mxPoint x="450" y="430" as="sourcePoint" />
+            <mxPoint x="550" y="330" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ywKfvuuUJCsj_BXJOMeK-21" value="" style="fontSize=12;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ywKfvuuUJCsj_BXJOMeK-14" target="ywKfvuuUJCsj_BXJOMeK-15">
+          <mxGeometry width="100" height="100" relative="1" as="geometry">
+            <mxPoint x="430" y="440" as="sourcePoint" />
+            <mxPoint x="530" y="340" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

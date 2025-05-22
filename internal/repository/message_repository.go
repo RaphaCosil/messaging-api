@@ -9,6 +9,7 @@ type MessageRepository interface {
 	FindAll() ([]model.Message, error)
 	FindByID(id uint) (model.Message, error)
 	Create(message model.Message) (model.Message, error)
+	Update(message_id uint, message model.Message) (model.Message, error)
 	Delete(id uint) error
 	FindByChatID(chatID uint) ([]model.Message, error)
 	FindByUserID(userID uint) ([]model.Message, error)
@@ -41,6 +42,13 @@ func (r *messageRepository) FindByID(id uint) (model.Message, error) {
 
 func (r *messageRepository) Create(message model.Message) (model.Message, error) {
 	if err := r.db.Create(&message).Error; err != nil {
+		return model.Message{}, err
+	}
+	return message, nil
+}
+
+func (r *messageRepository) Update(message_id uint, message model.Message) (model.Message, error) {
+	if err := r.db.Model(&model.Message{}).Where("message_id = ?", message_id).Updates(message).Error; err != nil {
 		return model.Message{}, err
 	}
 	return message, nil

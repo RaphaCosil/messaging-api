@@ -21,8 +21,12 @@ func main() {
 	userChatService := service.NewUserChatService(userChatRepo)
 	chatHandler := handler.NewChatHandler(chatService, userChatService)
 
+
+	messageRepo := repository.NewMessageRepository(database)
+	messageService := service.NewMessageService(messageRepo)
+	
 	wsHub := handler.NewHub()
-	wsHandler := handler.NewWebSocketHandler(wsHub)
+	wsHandler := handler.NewWebSocketHandler(wsHub, messageService)
 	go wsHandler.Hub.Run()
 
 	
