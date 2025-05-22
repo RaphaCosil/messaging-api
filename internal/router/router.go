@@ -1,15 +1,14 @@
 package router
 
 import (
-	"github.com/RaphaCosil/messaging-api/internal/handler/http"
-	"github.com/RaphaCosil/messaging-api/internal/handler/websocket"
+	"github.com/RaphaCosil/messaging-api/internal/handler"
 	"github.com/gin-gonic/gin"
 )
 
 func SetupRouter(
-	userHandler *http.UserHandler,
-	chatHandler *http.ChatHandler,
-	wsHandler *websocket.WebSocketHandler,
+	userHandler *handler.UserHandler,
+	chatHandler *handler.ChatHandler,
+	wsHandler *handler.WebSocketHandler,
 ) *gin.Engine {
 	r := gin.Default()
 
@@ -42,6 +41,5 @@ func SetupRouter(
 			c.Request,
 		)
     })
-
 	return r
 }
