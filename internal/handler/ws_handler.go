@@ -4,6 +4,7 @@ import (
     "net/http"
     "sync"
     "time"
+    "log"
     "encoding/json"
     "github.com/gorilla/websocket"
     "github.com/RaphaCosil/messaging-api/internal/model"
@@ -133,6 +134,8 @@ func (h *WebSocketHandler) HandleConnection(w http.ResponseWriter, r *http.Reque
             return
         }
 
+        log.Printf("Received message: %s", msgData)
+
         var msg GenericMessage
         err = json.Unmarshal(msgData, &msg)
         if err != nil {
@@ -165,6 +168,7 @@ func (h *WebSocketHandler) HandleMessage(msg GenericMessage) {
 
         err := json.Unmarshal(msg.Content, &message)
         if err != nil {
+            log.Println("Error unmarshalling message:", err)
             return
         }
 

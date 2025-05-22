@@ -1,18 +1,18 @@
 package service
 
-import(
+import (
 	"github.com/RaphaCosil/messaging-api/internal/model"
 	"github.com/RaphaCosil/messaging-api/internal/repository"
 )
 
 type UserService interface {
-	FindAll() ([]model.User, error)
-	FindByID(id uint) (model.User, error)
-	Create(user model.User) (model.User, error)
-	Update(id uint, user model.User) (model.User, error)
+	FindAll() ([]model.Customer, error)
+	FindByID(id uint) (model.Customer, error)
+	Create(user model.Customer) (model.Customer, error)
+	Update(id uint, user model.Customer) (model.Customer, error)
 	Delete(id uint) error
-	FindByUsername(username string) (model.User, error)
-	FindByChatID(chatID uint) ([]model.User, error)
+	FindByUsername(username string) (model.Customer, error)
+	FindByChatID(chatID uint) ([]model.Customer, error)
 }
 
 type userService struct {
@@ -23,19 +23,19 @@ func NewUserService(userRepo repository.UserRepository) UserService {
 	return &userService{userRepo}
 }
 
-func (s *userService) FindAll() ([]model.User, error) {
+func (s *userService) FindAll() ([]model.Customer, error) {
 	return s.userRepo.FindAll()
 }
 
-func (s *userService) FindByID(id uint) (model.User, error) {
+func (s *userService) FindByID(id uint) (model.Customer, error) {
 	return s.userRepo.FindByID(id)
 }
 
-func (s *userService) Create(user model.User) (model.User, error) {
+func (s *userService) Create(user model.Customer) (model.Customer, error) {
 	return s.userRepo.Create(user)
 }
 
-func (s *userService) Update(id uint, user model.User) (model.User, error) {
+func (s *userService) Update(id uint, user model.Customer) (model.Customer, error) {
 	return s.userRepo.Update(id, user)
 }
 
@@ -43,10 +43,10 @@ func (s *userService) Delete(id uint) error {
 	return s.userRepo.Delete(id)
 }
 
-func (s *userService) FindByUsername(username string) (model.User, error) {
+func (s *userService) FindByUsername(username string) (model.Customer, error) {
 	return s.userRepo.FindByUsername(username)
 }
 
-func (s *userService) FindByChatID(chatID uint) ([]model.User, error) {
+func (s *userService) FindByChatID(chatID uint) ([]model.Customer, error) {
 	return s.userRepo.FindByChatID(chatID)
 }

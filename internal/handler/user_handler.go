@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"github.com/RaphaCosil/messaging-api/internal/model"
 	"github.com/RaphaCosil/messaging-api/internal/service"
+	"github.com/gin-gonic/gin"
 )
 
 type UserHandler struct {
@@ -44,7 +44,7 @@ func (h *UserHandler) FindByID(c *gin.Context) {
 }
 
 func (h *UserHandler) Create(c *gin.Context) {
-	var user model.User
+	var user model.Customer
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user data"})
 		return
@@ -65,7 +65,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 		return
 	}
 
-	var user model.User
+	var user model.Customer
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user data"})
 		return

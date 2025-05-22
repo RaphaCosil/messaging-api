@@ -62,9 +62,9 @@ func (r *chatRepository) Delete(id uint) error {
 
 func (r *chatRepository) FindByUserID(userID uint) ([]model.Chat, error) {
 	var chats []model.Chat
-	if err := r.db.Table("user_chats").Select("chats.*").
-		Joins("JOIN chats ON user_chats.chat_id = chats.chat_id").
-		Where("user_chats.user_id = ?", userID).
+	if err := r.db.Table("customer_chats").Select("chats.*").
+		Joins("JOIN chats ON customer_chats.chat_id = chats.chat_id").
+		Where("customer_chats.customer_id = ?", userID).
 		Scan(&chats).Error; err != nil {
 		return nil, err
 	}

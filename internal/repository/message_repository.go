@@ -25,7 +25,7 @@ func NewMessageRepository(db *gorm.DB) MessageRepository {
 
 func (r *messageRepository) FindAll() ([]model.Message, error) {
 	var messages []model.Message
-	result := r.db.Preload("Chat").Preload("User").Find(&messages)
+	result := r.db.Preload("Chat").Preload("Customer").Find(&messages)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -34,7 +34,7 @@ func (r *messageRepository) FindAll() ([]model.Message, error) {
 
 func (r *messageRepository) FindByID(id uint) (model.Message, error) {
 	var message model.Message
-	if err := r.db.Preload("Chat").Preload("User").First(&message, id).Error; err != nil {
+	if err := r.db.Preload("Chat").Preload("Customer").First(&message, id).Error; err != nil {
 		return model.Message{}, err
 	}
 	return message, nil
@@ -63,7 +63,7 @@ func (r *messageRepository) Delete(id uint) error {
 
 func (r *messageRepository) FindByChatID(chatID uint) ([]model.Message, error) {
 	var messages []model.Message
-	result := r.db.Where("chat_id = ?", chatID).Preload("Chat").Preload("User").Find(&messages)
+	result := r.db.Where("chat_id = ?", chatID).Preload("Chat").Preload("Customer").Find(&messages)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -72,7 +72,7 @@ func (r *messageRepository) FindByChatID(chatID uint) ([]model.Message, error) {
 
 func (r *messageRepository) FindByUserID(userID uint) ([]model.Message, error) {
 	var messages []model.Message
-	result := r.db.Where("user_id = ?", userID).Preload("Chat").Preload("User").Find(&messages)
+	result := r.db.Where("customer_id = ?", userID).Preload("Chat").Preload("Customer").Find(&messages)
 	if result.Error != nil {
 		return nil, result.Error
 	}

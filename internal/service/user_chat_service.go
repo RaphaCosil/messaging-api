@@ -1,16 +1,16 @@
 package service
 
-import(
+import (
 	"github.com/RaphaCosil/messaging-api/internal/model"
 	"github.com/RaphaCosil/messaging-api/internal/repository"
 )
 
 type UserChatService interface {
-	FindAll() ([]model.UserChat, error)
-	Create(userID, chatID uint) (model.UserChat, error)
+	FindAll() ([]model.CustomerChat, error)
+	Create(userID, chatID uint) (model.CustomerChat, error)
 	Delete(userID, chatID uint) error
-	FindByUserID(userID uint) ([]model.UserChat, error)
-	FindByChatID(chatID uint) ([]model.UserChat, error)
+	FindByUserID(userID uint) ([]model.CustomerChat, error)
+	FindByChatID(chatID uint) ([]model.CustomerChat, error)
 	UserHasAccessToChat(userID, chatID uint) (bool)
 }
 
@@ -22,31 +22,31 @@ func NewUserChatService(userChatRepo repository.UserChatRepository) UserChatServ
 	return &userChatService{userChatRepo}
 }
 
-func (s *userChatService) FindAll() ([]model.UserChat, error) {
+func (s *userChatService) FindAll() ([]model.CustomerChat, error) {
 	return s.userChatRepo.FindAll()
 }
 
-func (s *userChatService) Create(userID, chatID uint) (model.UserChat, error) {
-	userChat := model.UserChat{
-		UserID: userID,
+func (s *userChatService) Create(userID, chatID uint) (model.CustomerChat, error) {
+	userChat := model.CustomerChat{
+		CustomerID: userID,
 		ChatID: chatID,
 	}
 	return s.userChatRepo.Create(userChat)
 }
 
 func (s *userChatService) Delete(userID, chatID uint) error {
-	userChat := model.UserChat{
-		UserID: userID,
+	userChat := model.CustomerChat{
+		CustomerID: userID,
 		ChatID: chatID,
 	}
 	return s.userChatRepo.Delete(userChat)
 }
 
-func (s *userChatService) FindByUserID(userID uint) ([]model.UserChat, error) {
+func (s *userChatService) FindByUserID(userID uint) ([]model.CustomerChat, error) {
 	return s.userChatRepo.FindByUserID(userID)
 }
 
-func (s *userChatService) FindByChatID(chatID uint) ([]model.UserChat, error) {
+func (s *userChatService) FindByChatID(chatID uint) ([]model.CustomerChat, error) {
 	return s.userChatRepo.FindByChatID(chatID)
 }
 

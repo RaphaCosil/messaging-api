@@ -6,13 +6,13 @@ import (
 )
 
 type UserRepository interface {
-	FindAll() ([]model.User, error)
-	FindByID(id uint) (model.User, error)
-	Create(user model.User) (model.User, error)
-	Update(id uint, user model.User) (model.User, error)
+	FindAll() ([]model.Customer, error)
+	FindByID(id uint) (model.Customer, error)
+	Create(user model.Customer) (model.Customer, error)
+	Update(id uint, user model.Customer) (model.Customer, error)
 	Delete(id uint) error
-	FindByUsername(username string) (model.User, error)
-	FindByChatID(chatID uint) ([]model.User, error)
+	FindByUsername(username string) (model.Customer, error)
+	FindByChatID(chatID uint) ([]model.Customer, error)
 }
 
 type userRepository struct {
@@ -23,16 +23,16 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepository{db}
 }
 
-func (r *userRepository) Login(username, password string) (model.User, error) {
-	var user model.User
+func (r *userRepository) Login(username, password string) (model.Customer, error) {
+	var user model.Customer
 	if err := r.db.Where("username = ? AND password = ?", username, password).First(&user).Error; err != nil {
-		return model.User{}, err
+		return model.Customer{}, err
 	}
 	return user, nil
 }
 
-func (r *userRepository) FindAll() ([]model.User, error) {
-	var users []model.User
+func (r *userRepository) FindAll() ([]model.Customer, error) {
+	var users []model.Customer
 	result := r.db.Find(&users)
 	if result.Error != nil {
 		return nil, result.Error
@@ -40,48 +40,48 @@ func (r *userRepository) FindAll() ([]model.User, error) {
 	return users, nil
 }
 
-func (r *userRepository) FindByID(id uint) (model.User, error) {
-	var user model.User
+func (r *userRepository) FindByID(id uint) (model.Customer, error) {
+	var user model.Customer
 	if err := r.db.First(&user, id).Error; err != nil {
-		return model.User{}, err
+		return model.Customer{}, err
 	}
 	return user, nil
 }
 
-func (r *userRepository) Create(user model.User) (model.User, error) {
+func (r *userRepository) Create(user model.Customer) (model.Customer, error) {
 	if err := r.db.Create(&user).Error; err != nil {
-		return model.User{}, err
+		return model.Customer{}, err
 	}
 	return user, nil
 }
 
-func (r *userRepository) Update(id uint, user model.User) (model.User, error) {
-	if err := r.db.Model(&user).Where("user_id = ?", id).Updates(user).Error; err != nil {
-		return model.User{}, err
+func (r *userRepository) Update(id uint, user model.Customer) (model.Customer, error) {
+	if err := r.db.Model(&user).Where("customer_id = ?", id).Updates(user).Error; err != nil {
+		return model.Customer{}, err
 	}
 	return user, nil
 }
 
 func (r *userRepository) Delete(id uint) error {
-	if err := r.db.Delete(&model.User{}, id).Error; err != nil {
+	if err := r.db.Delete(&model.Customer{}, id).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *userRepository) FindByUsername(username string) (model.User, error) {
-	var user model.User
+func (r *userRepository) FindByUsername(username string) (model.Customer, error) {
+	var user model.Customer
 	if err := r.db.Where("username = ?", username).First(&user).Error; err != nil {
-		return model.User{}, err
+		return model.Customer{}, err
 	}
 	return user, nil
 }
 
-func (r *userRepository) FindByChatID(chatID uint) ([]model.User, error) {
-	var users []model.User
-	if err := r.db.Table("user_chats").Select("users.*").
-		Joins("JOIN users ON user_chats.user_id = users.user_id").
-		Where("user_chats.chat_id = ?", chatID).Find(&users).Error; err != nil {
+func (r *userRepository) FindByChatID(chatID uint) ([]model.Customer, error) {
+	var users []model.Customer
+	if err := r.db.Table("customer_chats").Select("customers.*").
+		Joins("JOIN customers ON customer_chats.customer_id = customers.customer_id").
+		Where("customer_chats.chat_id = ?", chatID).Find(&users).Error; err != nil {
 		return nil, err
 	}
 	return users, nil
