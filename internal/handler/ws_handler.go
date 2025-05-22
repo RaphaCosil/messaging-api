@@ -12,7 +12,7 @@ import (
 
 type GenericMessage struct {
     Type      string      `json:"type"`
-    Content   interface{} `json:"content"`
+    Content   json.RawMessage `json:"content"`
     Timestamp time.Time   `json:"timestamp"`
 }
 
@@ -90,7 +90,7 @@ func (h *WebSocketHandler) HandleConnection(w http.ResponseWriter, r *http.Reque
         UserID   uint    `json:"user_id"`
         ChatID   uint    `json:"chat_id"`
     }
-    
+
     err = json.Unmarshal(msg, &initialData)
     if err != nil {
         return
@@ -113,14 +113,33 @@ func (h *WebSocketHandler) HandleConnection(w http.ResponseWriter, r *http.Reque
         h.mu.Unlock()
         return
     }
-    h.mu.Lock()
+    
     h.Hub.clients[client] = true
     h.mu.Unlock()
 
+    content, _ := json.Marshal(username)
     h.Hub.broadcast <- GenericMessage{
         Type:      "join",
-        Content:   username,
+        Content:   content,
         Timestamp: time.Now(),
+    }
+
+    for {
+        _, msgData, err := conn.ReadMessage()
+        if err != nil {
+            h.mu.Lock()
+            delete(h.Hub.clients, client)
+            h.mu.Unlock()
+            return
+        }
+
+        var msg GenericMessage
+        err = json.Unmarshal(msgData, &msg)
+        if err != nil {
+            continue
+        }
+
+        go h.HandleMessage(msg)
     }
 }
 
@@ -131,7 +150,7 @@ func (h *WebSocketHandler) HandleMessage(msg GenericMessage) {
 
         var message model.Message
 
-        err := json.Unmarshal(msg.Content.([]byte), &message)
+        err := json.Unmarshal(msg.Content, &message)
         if err != nil {
             return
         }
@@ -144,7 +163,7 @@ func (h *WebSocketHandler) HandleMessage(msg GenericMessage) {
         h.Hub.broadcast <- msg
         var message model.Message
 
-        err := json.Unmarshal(msg.Content.([]byte), &message)
+        err := json.Unmarshal(msg.Content, &message)
         if err != nil {
             return
         }
@@ -158,7 +177,7 @@ func (h *WebSocketHandler) HandleMessage(msg GenericMessage) {
 
         var messageId uint
 
-        err := json.Unmarshal(msg.Content.([]byte), &messageId)
+        err := json.Unmarshal(msg.Content, &messageId)
         if err != nil {
             return
         }
