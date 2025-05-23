@@ -14,7 +14,6 @@ import (
 type GenericMessage struct {
     Type      string      `json:"type"`
     Content   json.RawMessage `json:"content"`
-    Timestamp time.Time   `json:"timestamp"`
 }
 
 type Client struct {
@@ -31,9 +30,9 @@ type Hub struct {
 }
 
 type InitialData struct {
-    Username string `json:"username"`
-    UserID   uint    `json:"user_id"`
-    ChatID   uint    `json:"chat_id"`
+    Username  string `json:"username"`
+    CustomerID uint   `json:"customerId"`
+    ChatID   uint    `json:"chatId"`
 }
 
 func NewHub() *Hub {
@@ -87,7 +86,10 @@ func (h *WebSocketHandler) GetOrCreateHub(chatId uint) *Hub {
         h.hubs[chatId] = hub
         go hub.Run()
         log.Printf("Created new hub for chatId: %d", chatId)
+    } else {
+        log.Printf("Using existing hub for chatId: %d", chatId)
     }
+
     return hub
 }
 
@@ -95,14 +97,14 @@ func (h *WebSocketHandler) GetOrCreateHub(chatId uint) *Hub {
 func (h *WebSocketHandler) HandleConnection(w http.ResponseWriter, r *http.Request) {
     conn, err := upgrader.Upgrade(w, r, nil)
     if err != nil {
-        log.Println("Error upgrading connection:", err)
+        h.HandleError(err, "upgrade", nil)
         return
     }
     defer conn.Close()
 
     _, msg, err := conn.ReadMessage()
     if err != nil {
-        log.Println("Error reading initial message:", err)
+        h.HandleError(err, "read", nil)
         return
     }
 
@@ -141,7 +143,6 @@ func (h *WebSocketHandler) HandleDisconnect(client *Client) {
         h.hubs[client.chatId].broadcast <- GenericMessage{
             Type:      "leave",
             Content:   content,
-            Timestamp: time.Now(),
         }
     } else {
         h.mu.Unlock()
@@ -153,17 +154,18 @@ func (h *WebSocketHandler) HandleLogin(msg []byte, conn *websocket.Conn) (*Clien
     var initialData InitialData
     err := json.Unmarshal(msg, &initialData)
     if err != nil {
+        h.HandleError(err, "unmarshal", nil)
         log.Println("Error unmarshalling initial data:", err)
         return nil, nil, err
     }
-    if initialData.Username == "" || initialData.UserID == 0 || initialData.ChatID == 0 {
-        log.Println("Invalid initial data")
+    if initialData.Username == "" || initialData.CustomerID == 0 || initialData.ChatID == 0 {
+        h.HandleError(err, "validation", nil)
         return nil, nil, err
     }
 
     client := &Client{
         conn:     conn,
-        userId:   initialData.UserID,
+        userId:   initialData.CustomerID,
         chatId:   initialData.ChatID,
         username: initialData.Username,
     }
@@ -176,18 +178,16 @@ func (h *WebSocketHandler) HandleLogin(msg []byte, conn *websocket.Conn) (*Clien
 
     if _, ok := hub.clients[client]; ok {
         conn.WriteMessage(websocket.TextMessage, []byte("User  already connected"))
+        h.HandleError(err, "already connected", client)
         return nil, nil, nil
     }
 
     hub.clients[client] = true
 
-    log.Printf("Client %s connected to chatId: %d", client.username, client.chatId)
-
     content, _ := json.Marshal(client.username)
     hub.broadcast <- GenericMessage{
         Type:      "join",
         Content:   content,
-        Timestamp: time.Now(),
     }
 
     return client, hub, nil
@@ -201,6 +201,7 @@ func (h *WebSocketHandler) HandleMessage(msg GenericMessage) {
 
         err := json.Unmarshal(msg.Content, &message)
         if err != nil {
+            h.HandleError(err, "unmarshal", nil)
             return
         }
         h.hubs[message.ChatID].broadcast <- msg
@@ -214,7 +215,7 @@ func (h *WebSocketHandler) HandleMessage(msg GenericMessage) {
 
         err := json.Unmarshal(msg.Content, &message)
         if err != nil {
-            log.Println("Error unmarshalling message:", err)
+            h.HandleError(err, "unmarshal", nil)
             return
         }
         h.hubs[message.ChatID].broadcast <- msg
@@ -228,10 +229,23 @@ func (h *WebSocketHandler) HandleMessage(msg GenericMessage) {
 
         err := json.Unmarshal(msg.Content, &message)
         if err != nil {
+            h.HandleError(err, "unmarshal", nil)
             return
         }
         h.hubs[message.ChatID].broadcast <- msg
 
         h.messageService.Delete(message.MessageID, message.CustomerID)
+    }
+}
+
+func (h *WebSocketHandler) HandleError(err error, errorType string, client *Client) {
+    if err != nil {
+        log.Printf("Error [%s]: %v", errorType, err)
+        if client != nil {
+            conn := client.conn
+            if conn != nil {
+                conn.WriteMessage(websocket.TextMessage, []byte(err.Error()))
+            }
+        }
     }
 }
