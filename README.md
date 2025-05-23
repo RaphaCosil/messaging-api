@@ -72,7 +72,7 @@ Chat API with support for multiple users, multiple rooms, and real-time WebSocke
   "content": {
     "chatId": 1,
     "customerId": 1,
-    "content": "Hello world!"
+    "content": "Hi world."
   }
 }
 ```
@@ -85,7 +85,7 @@ Chat API with support for multiple users, multiple rooms, and real-time WebSocke
   "content": {
     "chatId": 1,
     "customerId": 1,
-    "content": "Hi world"
+    "content": "Hello world!"
   }
 }
 ```
