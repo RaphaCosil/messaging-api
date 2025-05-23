@@ -126,5 +126,3 @@ Chat API with support for multiple users, multiple rooms, and real-time WebSocke
 ```bash
 go run cmd/server/main.go
 ```
-
----
