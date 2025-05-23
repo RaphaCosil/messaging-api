@@ -2,6 +2,7 @@
 CREATE TABLE customer (
     customer_id    SERIAL PRIMARY KEY,
     username   VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
@@ -35,10 +36,10 @@ CREATE TABLE message (
 );
 
 -- Insert Customers
-INSERT INTO customer (username) VALUES 
-('carl'),
-('sigmund'),
-('gustav');
+INSERT INTO customer (username, password) VALUES 
+('carl', '123abc'),
+('sigmund', '456def'),
+('gustav', '789ghi');
 
 -- Insert chats
 INSERT INTO chat (chat_name) VALUES 

@@ -108,29 +108,37 @@ func (h *WebSocketHandler) HandleConnection(w http.ResponseWriter, r *http.Reque
         return
     }
 
-    client, _, err := h.HandleLogin(msg, conn)
+    var genericMessage GenericMessage
+    err = json.Unmarshal(msg, &genericMessage)
+    if err != nil {
+        log.Println("Error unmarshalling message:", err)
+        conn.WriteMessage(websocket.TextMessage, []byte("Invalid message format"))
+        return
+    }
+
+    client, _, err := h.HandleLogin(genericMessage, conn)
     if err != nil || client == nil {
         return
     }
 
     for {
-        _, msgData, err := conn.ReadMessage()
+        _, msg, err := conn.ReadMessage()
         if err != nil {
             log.Println("Error reading message:", err)
             h.HandleDisconnect(client)
             return
         }
 
-        log.Printf("Received message: %s", msgData)
+        log.Printf("Received message: %s", msg)
 
-        var msg GenericMessage
-        err = json.Unmarshal(msgData, &msg)
+        var genericMessage GenericMessage
+        err = json.Unmarshal(msg, &genericMessage)
         if err != nil {
             log.Println("Error unmarshalling message:", err)
             continue
         }
 
-        go h.HandleMessage(msg)
+        go h.HandleMessage(genericMessage)
     }
 }
 
@@ -150,9 +158,10 @@ func (h *WebSocketHandler) HandleDisconnect(client *Client) {
     }
 }
 
-func (h *WebSocketHandler) HandleLogin(msg []byte, conn *websocket.Conn) (*Client, *Hub, error) {
+func (h *WebSocketHandler) HandleLogin(msg GenericMessage, conn *websocket.Conn) (*Client, *Hub, error) {
     var initialData InitialData
-    err := json.Unmarshal(msg, &initialData)
+
+    err := json.Unmarshal(msg.Content, &initialData)
     if err != nil {
         h.HandleError(err, "unmarshal", nil)
         log.Println("Error unmarshalling initial data:", err)
