@@ -30,6 +30,12 @@ type Hub struct {
     mu        sync.Mutex
 }
 
+type InitialData struct {
+    Username string `json:"username"`
+    UserID   uint    `json:"user_id"`
+    ChatID   uint    `json:"chat_id"`
+}
+
 func NewHub() *Hub {
     return &Hub{
         clients:   make(map[*Client]bool),
@@ -59,78 +65,57 @@ var upgrader = websocket.Upgrader{
 }
 
 type WebSocketHandler struct {
-    Hub *Hub
-    mu  sync.Mutex
+    hubs           map[uint]*Hub
+    mu             sync.Mutex
     messageService service.MessageService
 }
 
-func NewWebSocketHandler(hub *Hub, messageService service.MessageService) *WebSocketHandler {
+func NewWebSocketHandler(hubs map[uint]*Hub, messageService service.MessageService) *WebSocketHandler {
     return &WebSocketHandler{
-        Hub: hub,
+        hubs:           hubs,
         messageService: messageService,
     }
 }
 
+func (h *WebSocketHandler) GetOrCreateHub(chatId uint) *Hub {
+    h.mu.Lock()
+    defer h.mu.Unlock()
+
+    hub, exists := h.hubs[chatId]
+    if !exists {
+        hub = NewHub()
+        h.hubs[chatId] = hub
+        go hub.Run()
+        log.Printf("Created new hub for chatId: %d", chatId)
+    }
+    return hub
+}
+
+
 func (h *WebSocketHandler) HandleConnection(w http.ResponseWriter, r *http.Request) {
     conn, err := upgrader.Upgrade(w, r, nil)
     if err != nil {
+        log.Println("Error upgrading connection:", err)
         return
     }
     defer conn.Close()
 
-    var username string
-    var userId, chatId uint
-
     _, msg, err := conn.ReadMessage()
     if err != nil {
+        log.Println("Error reading initial message:", err)
         return
     }
 
-    var initialData struct {
-        Username string `json:"username"`
-        UserID   uint    `json:"user_id"`
-        ChatID   uint    `json:"chat_id"`
-    }
-
-    err = json.Unmarshal(msg, &initialData)
-    if err != nil {
+    client, _, err := h.HandleLogin(msg, conn)
+    if err != nil || client == nil {
         return
-    }
-
-    username = initialData.Username
-    userId = initialData.UserID
-    chatId = initialData.ChatID
-
-    if username == "" || userId == 0 || chatId == 0 {
-        conn.WriteMessage(websocket.TextMessage, []byte("Invalid initial data"))
-        return
-    }
-
-    client := &Client{conn: conn, userId: userId, chatId: chatId, username: username}
-
-    h.mu.Lock()
-    if _, ok := h.Hub.clients[client]; ok {
-        conn.WriteMessage(websocket.TextMessage, []byte("User already connected"))
-        h.mu.Unlock()
-        return
-    }
-    
-    h.Hub.clients[client] = true
-    h.mu.Unlock()
-
-    content, _ := json.Marshal(username)
-    h.Hub.broadcast <- GenericMessage{
-        Type:      "join",
-        Content:   content,
-        Timestamp: time.Now(),
     }
 
     for {
         _, msgData, err := conn.ReadMessage()
         if err != nil {
-            h.mu.Lock()
-            delete(h.Hub.clients, client)
-            h.mu.Unlock()
+            log.Println("Error reading message:", err)
+            h.HandleDisconnect(client)
             return
         }
 
@@ -139,6 +124,7 @@ func (h *WebSocketHandler) HandleConnection(w http.ResponseWriter, r *http.Reque
         var msg GenericMessage
         err = json.Unmarshal(msgData, &msg)
         if err != nil {
+            log.Println("Error unmarshalling message:", err)
             continue
         }
 
@@ -146,24 +132,84 @@ func (h *WebSocketHandler) HandleConnection(w http.ResponseWriter, r *http.Reque
     }
 }
 
+func (h *WebSocketHandler) HandleDisconnect(client *Client) {
+    h.mu.Lock()
+    if _, ok := h.hubs[client.chatId].clients[client]; ok {
+        delete(h.hubs[client.chatId].clients, client)
+        h.mu.Unlock()
+        content, _ := json.Marshal(client.username)
+        h.hubs[client.chatId].broadcast <- GenericMessage{
+            Type:      "leave",
+            Content:   content,
+            Timestamp: time.Now(),
+        }
+    } else {
+        h.mu.Unlock()
+        log.Println("Client not found in hub")
+    }
+}
+
+func (h *WebSocketHandler) HandleLogin(msg []byte, conn *websocket.Conn) (*Client, *Hub, error) {
+    var initialData InitialData
+    err := json.Unmarshal(msg, &initialData)
+    if err != nil {
+        log.Println("Error unmarshalling initial data:", err)
+        return nil, nil, err
+    }
+    if initialData.Username == "" || initialData.UserID == 0 || initialData.ChatID == 0 {
+        log.Println("Invalid initial data")
+        return nil, nil, err
+    }
+
+    client := &Client{
+        conn:     conn,
+        userId:   initialData.UserID,
+        chatId:   initialData.ChatID,
+        username: initialData.Username,
+    }
+
+    hub := h.GetOrCreateHub(client.chatId)
+
+    h.mu.Lock()
+    defer h.mu.Unlock()
+
+
+    if _, ok := hub.clients[client]; ok {
+        conn.WriteMessage(websocket.TextMessage, []byte("User  already connected"))
+        return nil, nil, nil
+    }
+
+    hub.clients[client] = true
+
+    log.Printf("Client %s connected to chatId: %d", client.username, client.chatId)
+
+    content, _ := json.Marshal(client.username)
+    hub.broadcast <- GenericMessage{
+        Type:      "join",
+        Content:   content,
+        Timestamp: time.Now(),
+    }
+
+    return client, hub, nil
+}
+
+
 func (h *WebSocketHandler) HandleMessage(msg GenericMessage) {
     switch msg.Type {
     case "send-message":
-        h.Hub.broadcast <- msg
-
         var message model.Message
 
         err := json.Unmarshal(msg.Content, &message)
         if err != nil {
             return
         }
+        h.hubs[message.ChatID].broadcast <- msg
 
         message.SentAt = time.Now()
 
         h.messageService.Create(message)
 
     case "update-message":
-        h.Hub.broadcast <- msg
         var message model.Message
 
         err := json.Unmarshal(msg.Content, &message)
@@ -171,21 +217,21 @@ func (h *WebSocketHandler) HandleMessage(msg GenericMessage) {
             log.Println("Error unmarshalling message:", err)
             return
         }
+        h.hubs[message.ChatID].broadcast <- msg
 
         message.SentAt = time.Now()
 
         h.messageService.Update(message.MessageID, message)
 
     case "delete-message":
-        h.Hub.broadcast <- msg
+        var message model.Message
 
-        var messageId uint
-
-        err := json.Unmarshal(msg.Content, &messageId)
+        err := json.Unmarshal(msg.Content, &message)
         if err != nil {
             return
         }
+        h.hubs[message.ChatID].broadcast <- msg
 
-        h.messageService.Delete(messageId)
+        h.messageService.Delete(message.MessageID, message.CustomerID)
     }
 }

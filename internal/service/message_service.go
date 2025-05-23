@@ -10,7 +10,7 @@ type MessageService interface {
 	FindByID(id uint) (model.Message, error)
 	Create(message model.Message) (model.Message, error)
 	Update(message_id uint, message model.Message) (model.Message, error)
-	Delete(id uint) error
+	Delete(id uint, customer_id uint) error
 	FindByChatID(chatID uint) ([]model.Message, error)
 	FindByUserID(userID uint) ([]model.Message, error)
 }
@@ -39,8 +39,8 @@ func (s *messageService) Update(message_id uint, message model.Message) (model.M
 	return s.messageRepo.Update(message_id, message)
 }
 
-func (s *messageService) Delete(id uint) error {
-	return s.messageRepo.Delete(id)
+func (s *messageService) Delete(id uint, customer_id uint) error {
+	return s.messageRepo.Delete(id, customer_id)
 }
 
 func (s *messageService) FindByChatID(chatID uint) ([]model.Message, error){

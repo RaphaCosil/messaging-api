@@ -23,18 +23,14 @@ func main() {
 
 
 	messageRepo := repository.NewMessageRepository(database)
-	messageService := service.NewMessageService(messageRepo)
-	
-	wsHub := handler.NewHub()
-	wsHandler := handler.NewWebSocketHandler(wsHub, messageService)
-	go wsHandler.Hub.Run()
-
-	
-	r := router.SetupRouter(
-		userHandler,
-		chatHandler,
-		wsHandler,
-	)
+    messageService := service.NewMessageService(messageRepo)
+    hubs := make(map[uint]*handler.Hub)
+    wsHandler := handler.NewWebSocketHandler(hubs, messageService)
+    r := router.SetupRouter(
+        userHandler,
+        chatHandler,
+        wsHandler,
+    )
 
 	r.Run(":8080")
 }

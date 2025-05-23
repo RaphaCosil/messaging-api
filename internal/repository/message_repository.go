@@ -10,7 +10,7 @@ type MessageRepository interface {
 	FindByID(id uint) (model.Message, error)
 	Create(message model.Message) (model.Message, error)
 	Update(message_id uint, message model.Message) (model.Message, error)
-	Delete(id uint) error
+	Delete(id uint, customer_id uint) error
 	FindByChatID(chatID uint) ([]model.Message, error)
 	FindByUserID(userID uint) ([]model.Message, error)
 }
@@ -54,8 +54,8 @@ func (r *messageRepository) Update(message_id uint, message model.Message) (mode
 	return message, nil
 }
 
-func (r *messageRepository) Delete(id uint) error {
-	if err := r.db.Delete(&model.Message{}, id).Error; err != nil {
+func (r *messageRepository) Delete(id uint, customer_id uint) error {
+	if err := r.db.Where("message_id = ? AND customer_id = ?", id, customer_id).Delete(&model.Message{}).Error; err != nil {
 		return err
 	}
 	return nil
